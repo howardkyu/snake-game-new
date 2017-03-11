@@ -1,0 +1,35 @@
+<!--
+Kuan Hao Yu     33115939
+Kimberly Nguy   86242309
+Pafoua Fang     84351619
+Kuanping Change 71018021
+-->
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>ICS 167 Snake Game</title>
+    <script src="fancywebsocket.js"></script>
+</head>
+
+<body>
+    <div id="body2">
+        <center>
+        Server IP: <input type="text" id="ip" name="ip"> &nbsp;&nbsp;&nbsp;&nbsp;
+        Server Port: <input type="text" id="port" name="port"> &nbsp;&nbsp;&nbsp;&nbsp;
+        Player ID: <input type="text" id="player-id" name="player-id"> &nbsp;&nbsp;&nbsp;&nbsp;
+        <button type="button" id="cnt-btn" onclick="connect();">Connect</button>
+        <br>
+        <br>
+        <canvas id="canvas-game" width = "1100" height = "600" style="border:1px solid" ></canvas>
+        <br>
+        <canvas id="canvas-score" width = "1100" height = "100" style="border:1px solid" ></canvas>
+        <br>
+        <div id="ping">Ping: 0 ms</div>
+        </center>
+    </div>
+    <script src="snake.js"></script>
+</body>
+
+</html>
