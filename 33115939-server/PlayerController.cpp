@@ -1,3 +1,5 @@
+#include "PlayerController.h"
+
 PlayerController::PlayerController() {
 }
 
@@ -9,10 +11,11 @@ void PlayerController::addPlayer(int clientID, std::string playerID) {
 }
 
 /**
- * Removes a player from the player map
+ * Removes a player from the player map if the player exists
  */
 void PlayerController::removePlayer(int clientID) {
-    playerMap.erase(clientID);
+    if (playerMap.find(clientID) != playerMap.end())
+        playerMap.erase(clientID);
 }
 
 /**
@@ -23,9 +26,17 @@ int PlayerController::size() {
 }
 
 /**
+ * Returns if player controller is currently waiting for
+ * another user
+ */
+int PlayerController::waiting() {
+    return playerMap.size() <= 2;
+}
+
+/**
  * Returns whether the map is empty
  */
-int PlayerController::size() {
+int PlayerController::empty() {
     return playerMap.empty();
 }
 

@@ -13,5 +13,9 @@ class PlayerController {
         void addPlayer(int clientID, std::string);
         void removePlayer(int clientID);
         int size();
+        int waiting();
         int empty();
-}
+};
+
+#endif /* PLAYERCONTROLLER_H */
+#pragma once

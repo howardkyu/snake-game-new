@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <random>
+#include <chrono>
 #include "websocket.h"
 #include "PlayerController.h"
 
@@ -17,7 +18,37 @@ PlayerController playerController;
 //
 default_random_engine engine;
 
+/**
+ * Called when the client connects
+ * When the client tries to establish a connection, check if two players are
+ * already connected. If not, send an ACCEPTED message. If so, send a REJECTED
+ * message.
+ */
 void openHandler(int clientID) {
+    if (playerController.size() <= 2) {
+        cout << "Welcome: " << clientID << std::endl;
+        server.wsSend(clientID, "ACCEPTED");
+    } else {
+        cout << "Reject: " << clientID << std::endl;
+        server.wsSend(clientID, "REJECTED");
+        server.wsClose(clientID);
+    }
+}
+
+/**
+ * Called when the client closes the connection
+ * Remove the player from the PlayerController
+ */
+void closeHandler(int clientID) {
+    cout << "Disconnect: " << clientID << std::endl;
+    playerController.removePlayer(clientID);
+    // TODO End game if 
+    if (playerController.waiting()) {
+        // End game
+    }
+}
+
+void messageHandler(int clientID, string message) {
 
 }
 
