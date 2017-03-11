@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -c
 LDFLAGS =
-SOURCES = main.cpp websocket.cpp sha1.cpp base64.cpp PlayerController.cpp
+SOURCES = main.cpp websocket.cpp sha1.cpp base64.cpp GameState.cpp Player.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECUTABLE = snake-server
 

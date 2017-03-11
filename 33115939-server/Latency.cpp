@@ -1,0 +1,3 @@
+Latency::Latency() {}
+
+delayReceive() {}
