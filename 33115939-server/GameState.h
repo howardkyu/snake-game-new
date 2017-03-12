@@ -4,19 +4,21 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <deque>
+#include <queue>
 #include "Player.h"
 #include "Coord.h"
+#include "Parse.h"
 
 class GameState {
 
     // Map containing clientIDs and their playerIDs
-    std::unordered_map<int, std::string> playerMap;
+    std::unordered_map<int, std::string> cidToPidMap;
 
     // Boolean for whether game is in session
     bool inSession;
     Player player1;
     Player player2;
-    
 
     public:
         // Constructor
@@ -27,15 +29,17 @@ class GameState {
         void removePlayer(int clientID);
         std::string getPlayerID(int clientID);
         int playerCount();
+        int addMessage(int clientID, std::string message);
+        std::string generateNextState();
 
         // Methods for controlling the game
         void setup();
         void start();
         void reset();
-
-        std::string generateSetupMessage();
         int waiting();
-
+        std::string generateSetupMessage();
+       
+    private:
         // Static constants
         static constexpr int COL = 60;
         static constexpr int ROW = 60;
@@ -47,6 +51,10 @@ class GameState {
         static const std::string PLAYER_TWO_COLOR;
         static const std::string PLAYER_ONE_DIRECTION;
         static const std::string PLAYER_TWO_DIRECTION;
+
+        std::string getNextMessage(Player player);
+        bool checkCollision(Coord player1Coord, Coord player2Coord);
+        Coord getHeadCoord(std::string message);
 };
 
 #endif /* GAMESTATE_H */

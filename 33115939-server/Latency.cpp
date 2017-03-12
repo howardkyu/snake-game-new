@@ -68,6 +68,11 @@ void Latency::sendNextMessages(long long currentTime, void (*sendHandler)(int cl
     }
 }
 
+void Latency::sendNTP(int clientID) {
+    long long currentTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    delaySend(clientID, "NTP:" + to_string(currentTime));
+}
+
 void Latency::reset() {
     this->generator = default_random_engine();
     uniform_int_distribution<int> distribution(

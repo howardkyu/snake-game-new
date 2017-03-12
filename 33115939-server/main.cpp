@@ -10,6 +10,7 @@
 #include "websocket.h"
 #include "GameState.h"
 #include "Latency.h"
+#include "Parse.h"
 
 using namespace std;
 using namespace chrono;
@@ -18,17 +19,9 @@ webSocket server;
 GameState gamestate;
 Latency latency;
 
-/**
- * Helper function for splitting up a message by a delimiter
- */
-vector<string> split(string message, char delimiter) {
-	vector<string> result = vector<string>();
-	stringstream stream(message);
-	string token;
-	while (getline(stream, token, delimiter)) {
-		result.push_back(token);
-	}
-	return result;
+void resetGame() {
+    gamestate.reset();
+    latency.reset();
 }
 
 /**
@@ -58,7 +51,15 @@ void handleInit(int clientID, string playerID) {
  * Handler function for delayed receiving. Called by latency.
  */
 void handleMessage(int clientID, string message) {
-    
+    std::vector<std::string> messageVector = Parse::split(message, ':');
+
+    if (messageVector[0] == "UPDATE") {     /* UPDATE:pid;ADD,x,y;ERASE,x,y */
+        // Add message to the player's message queue
+        gamestate.addMessage(clientID, messageVector[1]);
+    } else if (messageVector[0] == "NTP") {
+        // Send a delayed NTP to the player
+        latency.sendNTP(clientID);
+    }   
 }
 
 /**
@@ -108,7 +109,7 @@ void closeHandler(int clientID) {
  */
 void messageHandler(int clientID, string message) {
     cout << "D_RAWRECEIVE: " << message << endl;
-    vector<string> messageVector = split(message, ':');
+    vector<string> messageVector = Parse::split(message, ':');
 
     if (messageVector[0] == "INIT") {
         handleInit(clientID, messageVector[0]);
@@ -126,6 +127,25 @@ void periodicHandler() {
 
     // Send any delayed messages if exists
     latency.sendNextMessages(currentTime, handleSend);
+
+    // Generate the next state to send to clients
+    std::string message = gamestate.generateNextState();
+    while (message != "NULL") {
+        // Send the clients the message 
+        vector<int> clientIDs = server.getClientIDs();
+        for(int i = 0; i < clientIDs.size(); i++) {
+            latency.delaySend(clientIDs[i], message);
+        }
+
+        // If next state is collided, then reset the game
+        if(message == "COLLIDED") {
+            gamestate.reset();
+            latency.reset();
+        }
+
+        // Generate next gamestate
+        message = gamestate.generateNextState();
+    } 
 }
 
 int main(int argc, char *argv[]) {

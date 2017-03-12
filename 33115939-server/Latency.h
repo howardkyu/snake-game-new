@@ -19,6 +19,7 @@ class Latency {
         void delaySend(int clientID, std::string message);
         void receiveNextMessages(long long currentTime, void (*receiveHandler)(int clientID, std::string message));
         void sendNextMessages(long long currentTime, void (*sendHandler)(int clientID, std::string message));
+        void sendNTP(int clientID);
         void reset();      
     private:
         std::queue<Message> receiveQueue;
