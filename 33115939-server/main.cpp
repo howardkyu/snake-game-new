@@ -9,6 +9,7 @@
 #include <vector>
 #include "websocket.h"
 #include "GameState.h"
+#include "Latency.h"
 
 using namespace std;
 using namespace chrono;
@@ -17,9 +18,9 @@ webSocket server;
 GameState gamestate;
 Latency latency;
 
-//
-default_random_engine engine;
-
+/**
+ * Helper function for splitting up a message by a delimiter
+ */
 vector<string> split(string message, char delimiter) {
 	vector<string> result = vector<string>();
 	stringstream stream(message);
@@ -30,6 +31,9 @@ vector<string> split(string message, char delimiter) {
 	return result;
 }
 
+/**
+ * Handler function for initial setup for the game.
+ */
 void handleInit(int clientID, string playerID) {
     if (gamestate.waiting())
         gamestate.addPlayer(clientID, playerID);
@@ -48,6 +52,20 @@ void handleInit(int clientID, string playerID) {
             server.wsSend(clientIDs[i], setupMessage);
         }
     }
+}
+
+/**
+ * Handler function for delayed receiving. Called by latency.
+ */
+void handleMessage(int clientID, string message) {
+    
+}
+
+/**
+ * Handler function for delayed sending. Called by latency.
+ */
+void handleSend(int clientID, string message) {
+    server.wsSend(clientID, message);
 }
 
 /**
@@ -73,19 +91,41 @@ void openHandler(int clientID) {
 void closeHandler(int clientID) {
     cout << "Disconnect: " << clientID << endl;
     gamestate.removePlayer(clientID);
+
     if (gamestate.waiting()) {
         gamestate.reset();
-        // TODO SEND ENDGAME TO CLIENTS
+        latency.reset();
+
+        vector<int> clientIDs = server.getClientIDs();
+        for (int i = 0; i < clientIDs.size(); i++) {
+            server.wsClose(clientIDs[i]);
+        }
     }
 }
 
+/**
+ * Called when a message is sent through the socket
+ */
 void messageHandler(int clientID, string message) {
     cout << "D_RAWRECEIVE: " << message << endl;
     vector<string> messageVector = split(message, ':');
 
     if (messageVector[0] == "INIT") {
         handleInit(clientID, messageVector[0]);
+    } else {
+        string time = messageVector[messageVector.size() - 1];
+        latency.delayReceive(clientID, message, stoll(time));
     }
+}
+
+void periodicHandler() {
+    long long currentTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(); 
+
+    // Receive any delayed messages if exists
+    latency.receiveNextMessages(currentTime, handleMessage);
+
+    // Send any delayed messages if exists
+    latency.sendNextMessages(currentTime, handleSend);
 }
 
 int main(int argc, char *argv[]) {
@@ -100,11 +140,11 @@ int main(int argc, char *argv[]) {
     server.setOpenHandler(openHandler);         /* Called upon opening connection */
     server.setCloseHandler(closeHandler);       /* Called upon handling connection */
     server.setMessageHandler(messageHandler);   /* Called upon receiving message */
+    server.setPeriodicHandler(periodicHandler); /* Called every once a while */
 
     // Start server to listen to specified port
     server.startServer(port);
 
-    engine = default_random_engine();
     gamestate = GameState();
     latency = Latency();
 

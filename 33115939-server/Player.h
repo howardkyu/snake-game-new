@@ -18,6 +18,9 @@ class Player {
         Player();
         Player(int clientID, std::string playerID, std::string color, std::string direction);
 
+        void addCoord(Coord coord);
+        Coord getHeadCoord();
+
         int getClientID();
         std::string getPlayerID();
         std::string getColor();

@@ -56,9 +56,11 @@ void GameState::setup() {
     for (auto it : playerMap) {
         if (first) {
             player1 = Player(it.first, it.second, PLAYER_ONE_COLOR, PLAYER_ONE_DIRECTION);
+            player1.addCoord(Coord{GameState::PLAYER_ONE_START_X, GameState::START_Y});
             first = false;
         } else {
             player2 = Player(it.first, it.second, PLAYER_TWO_COLOR, PLAYER_TWO_DIRECTION);
+            player2.addCoord(Coord{GameState::PLAYER_TWO_START_X, GameState::START_Y});
         }
     }
 }
@@ -69,14 +71,21 @@ void GameState::start() {
 
 void GameState::reset() {
     inSession = false;
+    playerMap.clear();
 }
 
+/**
+ * Generates the setup string
+ * SETUP:COL:ROW:FOOD_COLOR:pid1,color,R,x,y:pid2,color,L,x,y
+ */
 std::string GameState::generateSetupMessage() {
     std::string setupMessage = "SETUP:" + 
         std::to_string(GameState::COL) + ":" + std::to_string(GameState::ROW) +
         ":" + GameState::FOOD_COLOR + ":" +
-        player1.getPlayerID() + "," + player1.getColor() + "," + player1.getDirection() + ":" +
-        player2.getPlayerID() + "," + player2.getColor() + "," + player2.getDirection();
+        player1.getPlayerID() + "," + player1.getColor() + "," + player1.getDirection() +
+        std::to_string(player1.getHeadCoord().x) + "," + std::to_string(player1.getHeadCoord().y) + ":" +
+        player2.getPlayerID() + "," + player2.getColor() + "," + player2.getDirection() +
+        std::to_string(player2.getHeadCoord().x) + "," + std::to_string(player2.getHeadCoord().y);
 
     return setupMessage;  
 }

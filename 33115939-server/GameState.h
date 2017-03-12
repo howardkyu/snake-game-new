@@ -5,12 +5,9 @@
 #include <unordered_map>
 #include <vector>
 #include "Player.h"
+#include "Coord.h"
 
 class GameState {
-    struct Coord {
-        int x;
-        int y;
-    };
 
     // Map containing clientIDs and their playerIDs
     std::unordered_map<int, std::string> playerMap;
@@ -42,6 +39,9 @@ class GameState {
         // Static constants
         static constexpr int COL = 60;
         static constexpr int ROW = 60;
+        static constexpr int PLAYER_ONE_START_X = COL / 4;
+        static constexpr int PLAYER_TWO_START_X = COL - (COL / 4);
+        static constexpr int START_Y = ROW / 2;
         static const std::string FOOD_COLOR;
         static const std::string PLAYER_ONE_COLOR;
         static const std::string PLAYER_TWO_COLOR;

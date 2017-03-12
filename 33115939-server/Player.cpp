@@ -10,6 +10,14 @@ Player::Player(int clientID, std::string playerID, std::string color, std::strin
     this->direction = direction;
 }
 
+void Player::addCoord(Coord coord) {
+    snake.push_back(coord);
+}
+
+Coord Player::getHeadCoord() {
+    return snake.front();
+}
+
 int Player::getClientID() {
     return clientID;
 }
