@@ -2,6 +2,6 @@ S: ACCEPTED
 C: INIT:pid
 S: SETUP:COL:ROW:FOOD_COLOR:pid1,color,R,x,y:pid2,color,L,x,y
 C: UPDATE:pid;ADD,x,y;ERASE,x,y
-S: UPDATE:pid1;ADD,x,y;ERASE,x,y;SCORE,xxx:UPDATE:pid2;ADD,x,y;ERASE,x,y;SCORE,yyy
+S: STATE:pid1;ADD,x,y;ERASE,x,y;SCORE,xxx:pid2;ADD,x,y;ERASE,x,y;SCORE,yyy:FOOD,x,y
 
 S: COLLISION:pid1;SCORE,xxx:pid2;SCORE,xxx
