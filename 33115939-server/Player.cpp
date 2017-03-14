@@ -52,6 +52,10 @@ bool Player::hasCoord(Coord coord) {
     }
 }
 
+void Player::incScore() {
+    this->score++;
+}
+
 int Player::getClientID() {
     return clientID;
 }

@@ -3,18 +3,18 @@
 using namespace std;
 using namespace chrono;
 
+uniform_int_distribution<int> Latency::distribution(Latency::MIN_DELAY, Latency::MAX_DELAY);
+
 Latency::Latency() {
-    this->generator = default_random_engine();
-    uniform_int_distribution<int> distribution(
-        Latency::MIN_DELAY, Latency::MAX_DELAY);
+    generator = default_random_engine();
     sendQueue = queue<Message>();
     receiveQueue = queue<Message>();
 }
 
 void Latency::delayReceive(int clientID, string message, long long time) {
     // Generate a distributed random number from MIN_DELAY to MAX_DELAY
-    int delay = distribution(generator);
-
+    int delay = Latency::distribution(generator);
+    
     if (receiveQueue.size() <= Latency::MAX_BUFFER_SIZE) {
         long long receiveTimeStamp = time + delay;
         receiveQueue.push(Message{clientID, message, receiveTimeStamp});
@@ -27,7 +27,7 @@ void Latency::delaySend(int clientID, string message) {
     long long currentTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 
     // Generate a distributed random number from MIN_DELAY to MAX_DELAY
-    int delay = distribution(generator);   
+    int delay = Latency::distribution(generator);   
         
     // If send queue is smaller than max buffer size
     // Set the time stamp and push it to the back
@@ -38,13 +38,13 @@ void Latency::delaySend(int clientID, string message) {
     }
 }
 
-void Latency::receiveNextMessages(long long currentTime, void (*receiveHandler)(int clientID, string message)) {
+void Latency::receiveNextMessages(long long currentTime, void (*receiveHandler)(int clientID, string message)) {    
     if (receiveQueue.empty())
         return;
-    
-    while (true) {
+        
+    while (!receiveQueue.empty()) {
         Message message = receiveQueue.front();
-        if (currentTime >= receiveQueue.front().timeToProcess) {
+        if (currentTime >= message.timeToProcess) {
             (*receiveHandler)(message.clientID, message.message);
             receiveQueue.pop();
         } else {
@@ -57,7 +57,7 @@ void Latency::sendNextMessages(long long currentTime, void (*sendHandler)(int cl
     if (sendQueue.empty())
         return;
     
-    while (true) {
+    while (!sendQueue.empty()) {
         Message message = sendQueue.front();
         if (currentTime >= sendQueue.front().timeToProcess) {
             (*sendHandler)(message.clientID, message.message);
@@ -74,9 +74,11 @@ void Latency::sendNTP(int clientID) {
 }
 
 void Latency::reset() {
-    this->generator = default_random_engine();
-    uniform_int_distribution<int> distribution(
-        Latency::MIN_DELAY, Latency::MAX_DELAY);
+    generator = default_random_engine();
     sendQueue = queue<Message>();
     receiveQueue = queue<Message>();
+}
+
+bool Latency::empty() {
+    return sendQueue.empty() && receiveQueue.empty();
 }

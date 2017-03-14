@@ -5,6 +5,7 @@
 #include <string>
 #include <chrono>
 #include <random>
+#include <iostream>
 
 struct Message {
     int clientID;
@@ -20,15 +21,17 @@ class Latency {
         void receiveNextMessages(long long currentTime, void (*receiveHandler)(int clientID, std::string message));
         void sendNextMessages(long long currentTime, void (*sendHandler)(int clientID, std::string message));
         void sendNTP(int clientID);
-        void reset();      
+        void reset();
+
+        bool empty();      
     private:
         std::queue<Message> receiveQueue;
         std::queue<Message> sendQueue;
         std::default_random_engine generator;
-        std::uniform_int_distribution<int> distribution;
         
         // Static constants
-        static constexpr int MAX_DELAY = 200;
+        static std::uniform_int_distribution<int> distribution;
+        static constexpr int MAX_DELAY = 150;
         static constexpr int MIN_DELAY = MAX_DELAY/2;
         static constexpr int MAX_BUFFER_SIZE = 100;  
 };

@@ -31,6 +31,9 @@ class Player {
         void removeTail();
         Coord getHeadCoord();
         bool hasCoord(Coord coord);
+
+        // Player modifier methods
+        void incScore();
         
         // Accessor methods
         int getClientID();

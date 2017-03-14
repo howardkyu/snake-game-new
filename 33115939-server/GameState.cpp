@@ -55,13 +55,14 @@ int GameState::addMessage(int clientID, std::string message) {
 }
 
 std::string GameState::generateNextState() {
-    // Get player1 and player2 next messages if any exists
-    std::string player1Message = getNextMessage(player1);
-    std::string player2Message = getNextMessage(player2);
-
-    // If either have not receive a message, postpone
-    if (player1Message == "NULL" || player2Message == "NULL") 
+    // Return "NULL" if player1 or player2 has no messages
+    if (player1.getMessageCount() == 0 || player2.getMessageCount() == 0) {
         return "NULL";
+    }
+    
+    // Get player1 and player2 next messages if both exists
+    std::string player1Message = player1.getNextMessage();
+    std::string player2Message = player2.getNextMessage();
 
     // Add a coordinate to player1's snake and erase the tail
     Coord player1Head = getHeadCoord(player1Message);
@@ -73,15 +74,24 @@ std::string GameState::generateNextState() {
     player2.addHead(player2Head);
     player2.removeTail();
 
+    // Check for food
+    bool foodEaten = checkFood(player1Head, player2Head);
+
     // Check for collision
     bool collided = checkCollision(player1Head, player2Head);
 
-    if(collided) {
-        return "COLLIDED";
+    if (collided) {
+        inSession = false;
+
+        // COLLIDED:pid1;SCORE,xxx:pid2;SCORE,xxx
+        return "COLLIDED:" + player1.getPlayerID() + ";SCORE," + std::to_string(player1.getScore()) +
+            ":" + player2.getPlayerID() + ";SCORE," + std::to_string(player2.getScore());
     } else {
         // Construct message to send to both clients
-        // Syntax is: UPDATE:pid1;ADD,x,y;ERASE,x,y;SCORE,xxx:pid2;ADD,x,y;ERASE,x,y;SCORE,yyy
-        return "UPDATE:" + player1Message + ";SCORE," + std::to_string(player1.getScore()) + ":" + player2Message + "SCORE," + std::to_string(player2.getScore());
+        // Syntax: STATE:pid1;ADD,x,y;ERASE,x,y;SCORE,xxx:pid2;ADD,x,y;ERASE,x,y;SCORE,yyy:FOOD,x,y
+        return "STATE:" + player1Message + ";SCORE," + std::to_string(player1.getScore()) + ":" +
+            player2Message + ";SCORE," + std::to_string(player2.getScore()) +
+            ":FOOD," + std::to_string(foodCoord.x) + "," + std::to_string(foodCoord.y);
     }
 }
 
@@ -99,6 +109,7 @@ void GameState::setup() {
             player2.addHead(Coord{GameState::PLAYER_TWO_START_X, GameState::START_Y});
         }
     }
+    generateFood();
 }
 
 void GameState::start() {
@@ -115,7 +126,11 @@ void GameState::reset() {
  * another user
  */
 int GameState::waiting() {
-    return cidToPidMap.size() <= 2;
+    return cidToPidMap.size() < 2;
+}
+
+bool GameState::gameInSession() {
+    return inSession;
 }
 
 /**
@@ -125,10 +140,10 @@ int GameState::waiting() {
 std::string GameState::generateSetupMessage() {
     std::string setupMessage = "SETUP:" + 
         std::to_string(GameState::COL) + ":" + std::to_string(GameState::ROW) +
-        ":" + GameState::FOOD_COLOR + ":" +
-        player1.getPlayerID() + "," + player1.getColor() + "," + player1.getDirection() +
+        ":" + GameState::FOOD_COLOR + ":" + std::to_string(foodCoord.x) + ":" + std::to_string(foodCoord.y) + ":" +
+        player1.getPlayerID() + "," + player1.getColor() + "," + player1.getDirection() + "," +
         std::to_string(player1.getHeadCoord().x) + "," + std::to_string(player1.getHeadCoord().y) + ":" +
-        player2.getPlayerID() + "," + player2.getColor() + "," + player2.getDirection() +
+        player2.getPlayerID() + "," + player2.getColor() + "," + player2.getDirection() + "," +
         std::to_string(player2.getHeadCoord().x) + "," + std::to_string(player2.getHeadCoord().y);
 
     return setupMessage;  
@@ -136,23 +151,25 @@ std::string GameState::generateSetupMessage() {
 
 /******************/
 
-/**
- * Returns a message from the player's queue
- * If none exists, return "NULL"
- */
-std::string GameState::getNextMessage(Player player) {
-    if(player.getMessageCount() > 0) {
-        return player.getNextMessage();
-    } else {
-        return "NULL";
-    }
+bool GameState::checkCollision(Coord player1Head, Coord player2Head) {
+    if(player1.hasCoord(player2Head))
+        return true;
+    if (player2.hasCoord(player1Head))
+        return true;
+    return false;
 }
 
-bool GameState::checkCollision(Coord player1Coord, Coord player2Coord) {
-    if(player1.hasCoord(player2Coord))
+bool GameState::checkFood(Coord player1Head, Coord player2Head) {
+    if (player1Head.x == foodCoord.x && player1Head.y == foodCoord.y) {
+        player1.incScore();
+        generateFood();
         return true;
-    if (player2.hasCoord(player1Coord))
+    }
+    if (player2Head.x == foodCoord.x && player2Head.y == foodCoord.y) {
+        player2.incScore();
+        generateFood();
         return true;
+    }
     return false;
 }
 
@@ -164,4 +181,9 @@ Coord GameState::getHeadCoord(std::string message) {
     std::vector<std::string> addCoords = Parse::split(commandVector[1], ',');
 
     return Coord{std::stoi(addCoords[1]), std::stoi(addCoords[2])};
+}
+
+Coord GameState::generateFood() {
+    foodCoord.x = rand() % COL;
+    foodCoord.y = rand() % ROW;
 }

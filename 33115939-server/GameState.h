@@ -19,6 +19,7 @@ class GameState {
     bool inSession;
     Player player1;
     Player player2;
+    Coord foodCoord;
 
     public:
         // Constructor
@@ -37,6 +38,7 @@ class GameState {
         void start();
         void reset();
         int waiting();
+        bool gameInSession();
         std::string generateSetupMessage();
        
     private:
@@ -52,9 +54,10 @@ class GameState {
         static const std::string PLAYER_ONE_DIRECTION;
         static const std::string PLAYER_TWO_DIRECTION;
 
-        std::string getNextMessage(Player player);
-        bool checkCollision(Coord player1Coord, Coord player2Coord);
+        bool checkCollision(Coord player1Head, Coord player2Head);
+        bool checkFood(Coord player1Head, Coord player2Head);
         Coord getHeadCoord(std::string message);
+        Coord generateFood();
 };
 
 #endif /* GAMESTATE_H */

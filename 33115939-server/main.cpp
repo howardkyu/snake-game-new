@@ -19,7 +19,7 @@ webSocket server;
 GameState gamestate;
 Latency latency;
 
-void resetGame() {
+void resetGame(bool waitForLatency) {
     gamestate.reset();
     latency.reset();
 }
@@ -66,6 +66,7 @@ void handleMessage(int clientID, string message) {
  * Handler function for delayed sending. Called by latency.
  */
 void handleSend(int clientID, string message) {
+    // std::cout << "D_SEND: " << message << std::endl;
     server.wsSend(clientID, message);
 }
 
@@ -108,14 +109,16 @@ void closeHandler(int clientID) {
  * Called when a message is sent through the socket
  */
 void messageHandler(int clientID, string message) {
-    cout << "D_RAWRECEIVE: " << message << endl;
+    // cout << "D_RAWRECEIVE: " << message << endl;
     vector<string> messageVector = Parse::split(message, ':');
 
     if (messageVector[0] == "INIT") {
-        handleInit(clientID, messageVector[0]);
+        handleInit(clientID, messageVector[1]);
     } else {
-        string time = messageVector[messageVector.size() - 1];
-        latency.delayReceive(clientID, message, stoll(time));
+        // string time = messageVector[messageVector.size() - 1];
+        long long currentTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(); 
+
+        latency.delayReceive(clientID, message, currentTime);
     }
 }
 
@@ -131,16 +134,12 @@ void periodicHandler() {
     // Generate the next state to send to clients
     std::string message = gamestate.generateNextState();
     while (message != "NULL") {
+        // std::cout << message << std::endl;
+
         // Send the clients the message 
         vector<int> clientIDs = server.getClientIDs();
         for(int i = 0; i < clientIDs.size(); i++) {
             latency.delaySend(clientIDs[i], message);
-        }
-
-        // If next state is collided, then reset the game
-        if(message == "COLLIDED") {
-            gamestate.reset();
-            latency.reset();
         }
 
         // Generate next gamestate
