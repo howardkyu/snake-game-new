@@ -115,10 +115,10 @@ void messageHandler(int clientID, string message) {
     if (messageVector[0] == "INIT") {
         handleInit(clientID, messageVector[1]);
     } else {
-        // string time = messageVector[messageVector.size() - 1];
-        long long currentTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(); 
+        long long time = stoll(messageVector[messageVector.size() - 1]);
+        // long long time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(); 
 
-        latency.delayReceive(clientID, message, currentTime);
+        latency.delayReceive(clientID, message, time);
     }
 }
 

@@ -66,19 +66,21 @@ std::string GameState::generateNextState() {
 
     // Add a coordinate to player1's snake and erase the tail
     Coord player1Head = getHeadCoord(player1Message);
-    player1.addHead(player1Head);
-    player1.removeTail();
+    if (!ateFood(&player1, player1Head)) {
+        player1.removeTail();
+    }
 
     // Add a coordinate to player2's snake and erase the tail
     Coord player2Head = getHeadCoord(player2Message);
-    player2.addHead(player2Head);
-    player2.removeTail();
-
-    // Check for food
-    bool foodEaten = checkFood(player1Head, player2Head);
-
+    if (!ateFood(&player2, player2Head)) {
+        player2.removeTail();
+    }
+ 
     // Check for collision
     bool collided = checkCollision(player1Head, player2Head);
+
+    player2.addHead(player2Head);
+    player1.addHead(player1Head);
 
     if (collided) {
         inSession = false;
@@ -152,21 +154,16 @@ std::string GameState::generateSetupMessage() {
 /******************/
 
 bool GameState::checkCollision(Coord player1Head, Coord player2Head) {
-    if(player1.hasCoord(player2Head))
+    if(player1.hasCoord(player1Head, player2Head))
         return true;
-    if (player2.hasCoord(player1Head))
+    if (player2.hasCoord(player1Head, player2Head))
         return true;
     return false;
 }
 
-bool GameState::checkFood(Coord player1Head, Coord player2Head) {
-    if (player1Head.x == foodCoord.x && player1Head.y == foodCoord.y) {
-        player1.incScore();
-        generateFood();
-        return true;
-    }
-    if (player2Head.x == foodCoord.x && player2Head.y == foodCoord.y) {
-        player2.incScore();
+bool GameState::ateFood(Player* player, Coord playerHead) {
+    if (playerHead.x == foodCoord.x && playerHead.y == foodCoord.y) {
+        player->incScore();
         generateFood();
         return true;
     }

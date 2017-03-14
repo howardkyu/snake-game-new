@@ -5,6 +5,7 @@
 #include <vector>
 #include <deque>
 #include <queue>
+#include <iostream>
 #include "Coord.h"
 
 class Player {
@@ -30,7 +31,7 @@ class Player {
         void addHead(Coord coord);
         void removeTail();
         Coord getHeadCoord();
-        bool hasCoord(Coord coord);
+        bool hasCoord(Coord coord1, Coord coord2);
 
         // Player modifier methods
         void incScore();

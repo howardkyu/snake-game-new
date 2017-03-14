@@ -3,7 +3,7 @@
 using namespace std;
 using namespace chrono;
 
-uniform_int_distribution<int> Latency::distribution(Latency::MIN_DELAY, Latency::MAX_DELAY);
+uniform_int_distribution<int> Latency::distribution(75, 150);
 
 Latency::Latency() {
     generator = default_random_engine();

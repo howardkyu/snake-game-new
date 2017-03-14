@@ -55,7 +55,7 @@ class GameState {
         static const std::string PLAYER_TWO_DIRECTION;
 
         bool checkCollision(Coord player1Head, Coord player2Head);
-        bool checkFood(Coord player1Head, Coord player2Head);
+        bool ateFood(Player* player, Coord playerHead);
         Coord getHeadCoord(std::string message);
         Coord generateFood();
 };

@@ -61,7 +61,7 @@ function receive(message) {
         setInputListener();
 
         runGame();
-        gameLoop = setInterval(runGame, 80);
+        gameLoop = setInterval(runGame, 100);
 
         pollNTP();
         setInterval(pollNTP, 3000); // poll NTP every 3 seconds
@@ -89,7 +89,7 @@ function receive(message) {
          var newFoodX = parseInt(foodInfo[1]);
          var newFoodY = parseInt(foodInfo[2]);
          if (foodPosition.x != newFoodX || foodPosition.y != newFoodY) {
-             erase(foodPosition.x, foodPosition.y);
+            //  erase(foodPosition.x, foodPosition.y);
              foodPosition = {x: newFoodX, y: newFoodY};
              draw(foodPosition.x, foodPosition.y, FOOD_COLOR);
          }
@@ -99,10 +99,11 @@ function receive(message) {
 
     } else if (messageList[0] === "COLLIDED") {
         inSession = false;
-        
+
         // Syntax for collision message is:
         // COLLIDED:pid1;SCORE,xxx:pid2;SCORE,xxx
         clearInterval(gameLoop);
+        clearInterval(ntpLoop);
 
         var playerOneInfo = messageList[1].split(";");
         var playerTwoInfo = messageList[2].split(";");
@@ -288,6 +289,7 @@ function connect() {
     Server.bind('close', function(data) {
         document.getElementById('cnt-btn').disabled = false;
         clearInterval(gameLoop);
+        clearInterval(ntpLoop);
     });
 
     Server.bind('message', receive);

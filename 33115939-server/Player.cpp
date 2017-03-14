@@ -44,12 +44,18 @@ Coord Player::getHeadCoord() {
 /**
  * Return whether a coord is inside the player's snake
  */
-bool Player::hasCoord(Coord coord) {
-    for(int i = 0; i < snake.size(); i++) {
-        if(coord.x == snake[i].x && coord.y == snake[i].y) {
+bool Player::hasCoord(Coord coord1, Coord coord2) {
+    // std::cout << "Snake " << clientID << ":";
+    for (int i = 0; i < snake.size(); i++) {
+        // std::cout << snake[i].x <<"," << snake[i].y;
+        if (coord1.x == snake[i].x && coord1.y == snake[i].y) {
+            return true;
+        }
+        if (coord2.x == snake[i].x && coord2.y == snake[i].y) {
             return true;
         }
     }
+    // std::cout << std::endl;
 }
 
 void Player::incScore() {
