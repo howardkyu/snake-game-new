@@ -40,6 +40,31 @@ var ntpLoop;
 
 var inSession = false;
 
+// Connects to the server
+function connect() {
+    Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + document.getElementById('port').value);
+    
+    Server.bind('open', function() {
+        document.getElementById('cnt-btn').disabled = true;
+
+        gameCanvas = document.getElementById("canvas-game");
+        scoreCanvas = document.getElementById("canvas-score");
+
+        playerID = document.getElementById('player-id').value;
+
+    });
+
+    Server.bind('close', function(data) {
+        document.getElementById('cnt-btn').disabled = false;
+        clearInterval(gameLoop);
+        clearInterval(ntpLoop);
+    });
+
+    Server.bind('message', receive);
+
+    Server.connect();
+}
+
 function receive(message) {
     console.log("D_RECEIVING: " + message);
     var messageList = message.split(":");
@@ -133,46 +158,47 @@ function receive(message) {
     }
 }
 
-// Parses the message from the server concerning the player
-// and updates the player's score
-function parsePlayerInfo(playerInfo) {
-    var scoreInfo = playerInfo[playerInfo.length-1].split(",");
-    playerScore = scoreInfo[1]; 
+/*********************/
+/* GAMELOOP FUNCTION */
+/*********************/
+
+// Main game loop. Updates the snake position and checks if food is eaten
+function runGame() {
+    var newX = playerSnake[0].x;
+    var newY = playerSnake[0].y;
+
+    if (playerDirection == 'R') newX++;
+    else if (playerDirection == 'L') newX--;
+    else if (playerDirection == 'U') newY--;
+    else if (playerDirection == 'D') newY++;
+
+    if (newX >= COL) newX = 0;
+    if (newX < 0) newX = COL-1;
+    if (newY >= ROW) newY = 0;
+    if (newY < 0) newY = ROW-1;
+
+    // Construct message to send to the server
+    var messageToSend = "UPDATE:" + playerID + ";ADD," + newX + "," + newY;
+
+    var head;
+    // If food is not eaten, erase the tail
+    if (newX != foodPosition.x || newY != foodPosition.y) {     /* if food not eaten */
+        var tail = playerSnake.pop()
+        erase(tail.x, tail.y);
+        messageToSend += ";ERASE," + tail.x + "," + tail.y;
+    }
+    playerSnake.unshift({x: newX, y: newY});
+
+    // Draw the head 
+    draw(newX, newY, SNAKE_COLOR); 
+
+    // Send the move updates to the server
+    sendWithTime(messageToSend);    
 }
 
-// Parses the message from the server concerning the opponent
-// and updates the opponent's snake and score
-function parseOpponentInfo(opponentInfo) {
-    // Update the opponent's info
-    for(var i = 1; i < opponentInfo.length; i++) {
-        var info = opponentInfo[i].split(",");
-
-        switch(info[0]) {
-            case("ADD"):
-                draw(info[1], info[2], OPPONENT_SNAKE_COLOR);
-                break;
-            case("ERASE"):
-                erase(info[1], info[2]);
-                break;
-            case("SCORE"):
-                opponentScore = info[1];
-                break;             
-        }
-    }
-}
-
-// Compares the players' scores to see who is the winner
-function comparePlayersScore() {
-    if(playerScore > opponentScore) {
-        return playerID.toUpperCase() + " WINS!";
-    }
-    else if (playerScore < opponentScore) {
-        return opponentID.toUpperCase() + " WINS!";
-    }
-    else {
-        return "IT'S A TIE!";
-    }
-}
+/*******************/
+/* SETUP FUNCTIONS */
+/*******************/
 
 // Parses the server's message and initializes the variables for the game
 function gameSetup(messageList) {
@@ -242,64 +268,9 @@ function setInputListener() {
     });
 }
 
-// Main game loop. Updates the snake position and checks if food is eaten
-function runGame() {
-    var newX = playerSnake[0].x;
-    var newY = playerSnake[0].y;
-
-    if (playerDirection == 'R') newX++;
-    else if (playerDirection == 'L') newX--;
-    else if (playerDirection == 'U') newY--;
-    else if (playerDirection == 'D') newY++;
-
-    if (newX >= COL) newX = 0;
-    if (newX < 0) newX = COL-1;
-    if (newY >= ROW) newY = 0;
-    if (newY < 0) newY = ROW-1;
-
-    // Construct message to send to the server
-    var messageToSend = "UPDATE:" + playerID + ";ADD," + newX + "," + newY;
-
-    var head;
-    // If food is not eaten, erase the tail
-    if (newX != foodPosition.x || newY != foodPosition.y) {     /* if food not eaten */
-        var tail = playerSnake.pop()
-        erase(tail.x, tail.y);
-        messageToSend += ";ERASE," + tail.x + "," + tail.y;
-    }
-    playerSnake.unshift({x: newX, y: newY});
-
-    // Draw the head 
-    draw(newX, newY, SNAKE_COLOR); 
-
-    // Send the move updates to the server
-    sendWithTime(messageToSend);    
-}
-
-// Connects to the server
-function connect() {
-    Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + document.getElementById('port').value);
-    
-    Server.bind('open', function() {
-        document.getElementById('cnt-btn').disabled = true;
-
-        gameCanvas = document.getElementById("canvas-game");
-        scoreCanvas = document.getElementById("canvas-score");
-
-        playerID = document.getElementById('player-id').value;
-
-    });
-
-    Server.bind('close', function(data) {
-        document.getElementById('cnt-btn').disabled = false;
-        clearInterval(gameLoop);
-        clearInterval(ntpLoop);
-    });
-
-    Server.bind('message', receive);
-
-    Server.connect();
-}
+/********************/
+/* HELPER FUNCTIONS */
+/********************/
 
 // Draws
 function draw(x, y, color) {
@@ -313,6 +284,34 @@ function erase(x, y) {
    draw(x,y, BG_COLOR);
 }
 
+// Parses the message from the server concerning the player
+// and updates the player's score
+function parsePlayerInfo(playerInfo) {
+    var scoreInfo = playerInfo[playerInfo.length-1].split(",");
+    playerScore = scoreInfo[1]; 
+}
+
+// Parses the message from the server concerning the opponent
+// and updates the opponent's snake and score
+function parseOpponentInfo(opponentInfo) {
+    // Update the opponent's info
+    for(var i = 1; i < opponentInfo.length; i++) {
+        var info = opponentInfo[i].split(",");
+
+        switch(info[0]) {
+            case("ADD"):
+                draw(info[1], info[2], OPPONENT_SNAKE_COLOR);
+                break;
+            case("ERASE"):
+                erase(info[1], info[2]);
+                break;
+            case("SCORE"):
+                opponentScore = info[1];
+                break;             
+        }
+    }
+}
+
 // Determines which score to update when server sends a message that contains "SCORE1"
 function updateScore1(state) {
     if (playerType == "PLAYER1") {
@@ -323,7 +322,6 @@ function updateScore1(state) {
     }     
 }
 
-
 // Determines which score to update when server sends a message that contains "SCORE2"
 function updateScore2(state) {
     if (playerType == "PLAYER2") {
@@ -333,6 +331,10 @@ function updateScore2(state) {
         opponentScore = state;
     }     
 }
+
+/********************/
+/* CANVAS FUNCTIONS */
+/********************/
 
 // Updates the canvas size
 function setupCanvas(col, row) {
@@ -377,6 +379,10 @@ function displayWinner() {
     gameCtx.fillText("GAME OVER: " + winner, gameCanvas.width/2, gameCanvas.height/2);
 }
 
+/*****************/
+/* NTP FUNCTIONS */
+/*****************/
+
 function pollNTP() {
     var time = new Date().getTime();
     Server.send("message", "NTP:" + time);
@@ -401,6 +407,10 @@ function sendWithTime(message) {
     var time = new Date().getTime();
     Server.send("message", message + ":" + time);
 }
+
+/*********/
+/* RESET */
+/*********/
 
 function resetAll() {
     document.getElementById("cnt-btn").value="Play Again?";
