@@ -154,6 +154,8 @@ std::string GameState::generateSetupMessage() {
 /******************/
 
 bool GameState::checkCollision(Coord player1Head, Coord player2Head) {
+    if (player1Head.x == player2Head.x && player1Head.y == player2Head.y)
+        return true;
     if(player1.hasCoord(player1Head, player2Head))
         return true;
     if (player2.hasCoord(player1Head, player2Head))

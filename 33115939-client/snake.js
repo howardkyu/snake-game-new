@@ -64,7 +64,7 @@ function receive(message) {
         gameLoop = setInterval(runGame, 100);
 
         pollNTP();
-        setInterval(pollNTP, 3000); // poll NTP every 3 seconds
+        ntpLoop = setInterval(pollNTP, 3000); // poll NTP every 3 seconds
 
     } else if (messageList[0] === "STATE" && inSession) {
         // Syntax for the message that server sends to client to update state:
@@ -120,6 +120,10 @@ function receive(message) {
         // Update the score board
         updateScoreBoard();
         displayWinner();
+
+        Server.send('message', "GOODBYE");
+
+        resetAll();
 
     } else if (messageList[0] === "NTP") {
         console.log(message);
@@ -277,7 +281,7 @@ function connect() {
     Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + document.getElementById('port').value);
     
     Server.bind('open', function() {
-        // document.getElementById('cnt-btn').disabled = true;
+        document.getElementById('cnt-btn').disabled = true;
 
         gameCanvas = document.getElementById("canvas-game");
         scoreCanvas = document.getElementById("canvas-score");
@@ -392,9 +396,42 @@ function updatePingText() {
     pingDiv.innerHTML = "Ping: " + ping + " ms";
 }
 
-
 function sendWithTime(message) {
     console.log("D_SENDING: " + message);
     var time = new Date().getTime();
     Server.send("message", message + ":" + time);
+}
+
+function resetAll() {
+    document.getElementById("cnt-btn").value="Play Again?";
+    COL = 0;
+    ROW = 0;
+
+    SNAKE_COLOR = "";
+    OPPONENT_SNAKE_COLOR = "";
+    FOOD_COLOR = "";
+
+    Server = null;
+    gameCanvas = null;
+    scoreCanvas = null;
+    gameCtx = null;
+    scoreCtx = null;
+    connected = null;
+
+    foodPosition = null;
+
+    playerID = "";
+    playerDirection = '';
+    playerNumber = 0;
+    playerScore = 0;
+    playerSnake.length = 0;
+
+    opponentID = "";
+    opponentScore = 0;
+
+    ntpQueue.length = 0;
+    ping = 0;
+
+    gameLoop = null;
+    ntpLoop = null;
 }

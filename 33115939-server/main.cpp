@@ -18,8 +18,9 @@ using namespace chrono;
 webSocket server;
 GameState gamestate;
 Latency latency;
+int goodbye = 0;
 
-void resetGame(bool waitForLatency) {
+void resetGame() {
     gamestate.reset();
     latency.reset();
 }
@@ -95,8 +96,7 @@ void closeHandler(int clientID) {
     gamestate.removePlayer(clientID);
 
     if (gamestate.waiting()) {
-        gamestate.reset();
-        latency.reset();
+        resetGame();
 
         vector<int> clientIDs = server.getClientIDs();
         for (int i = 0; i < clientIDs.size(); i++) {
@@ -114,12 +114,18 @@ void messageHandler(int clientID, string message) {
 
     if (messageVector[0] == "INIT") {
         handleInit(clientID, messageVector[1]);
-    } else {
+    } else if (messageVector[0] == "GOODBYE") {
+        ++goodbye;
+        if (goodbye >= 2) {
+            server.wsClose(clientID);
+        }
+    } 
+    else {
         long long time = stoll(messageVector[messageVector.size() - 1]);
         // long long time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(); 
 
         latency.delayReceive(clientID, message, time);
-    }
+    } 
 }
 
 void periodicHandler() {
