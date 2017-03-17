@@ -16,6 +16,9 @@ Latency::Latency() {
     receiveQueue = queue<Message>();
 }
 
+/**
+ * Adds the message to the delayed receive queue
+ */
 void Latency::delayReceive(int clientID, string message, long long time) {
     // Generate a distributed random number from MIN_DELAY to MAX_DELAY
     int delay = Latency::distribution(generator);
@@ -26,6 +29,9 @@ void Latency::delayReceive(int clientID, string message, long long time) {
     }
 }
 
+/**
+ * Adds the message to the delayed send queue
+ */
 void Latency::delaySend(int clientID, string message) {
     // Convert to get the long long type time for the duration
     // time_since_epoch returns a the amount of time between this time and clock's epoch
@@ -43,6 +49,9 @@ void Latency::delaySend(int clientID, string message) {
     }
 }
 
+/**
+ * Handles all receive messages that are readied to be handled (after the delay)
+ */
 void Latency::receiveNextMessages(long long currentTime, void (*receiveHandler)(int clientID, string message)) {    
     if (receiveQueue.empty())
         return;
@@ -58,6 +67,9 @@ void Latency::receiveNextMessages(long long currentTime, void (*receiveHandler)(
     }
 }
 
+/**
+ * Handles all send messages that are readied to be handled (after the delay)
+ */
 void Latency::sendNextMessages(long long currentTime, void (*sendHandler)(int clientID, string message)) {
     if (sendQueue.empty())
         return;
@@ -73,17 +85,26 @@ void Latency::sendNextMessages(long long currentTime, void (*sendHandler)(int cl
     }
 }
 
+/**
+ * Send NTP to client with current time
+ */
 void Latency::sendNTP(int clientID) {
     long long currentTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     delaySend(clientID, "NTP:" + to_string(currentTime));
 }
 
+/**
+ * Reset latency object to original state
+ */
 void Latency::reset() {
     generator = default_random_engine();
     sendQueue = queue<Message>();
     receiveQueue = queue<Message>();
 }
 
+/**
+ * Checks whether both message queues are empty
+ */
 bool Latency::empty() {
     return sendQueue.empty() && receiveQueue.empty();
 }

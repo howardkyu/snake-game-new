@@ -34,14 +34,23 @@ std::string Player::getNextMessage() {
     return message;
 }
 
+/**
+ * Adds a new head to the player's snake
+ */
 void Player::addHead(Coord coord) {
     snake.push_front(coord);
 }
 
+/**
+ * Removes the tail from a player's snake
+ */
 void Player::removeTail() {
     snake.pop_back();
 }
 
+/**
+ * Retreive the head coordinate from the player's snake
+ */
 Coord Player::getHeadCoord() {
     return snake.front();
 }
@@ -63,34 +72,58 @@ bool Player::hasCoord(Coord coord1, Coord coord2) {
     // std::cout << std::endl;
 }
 
+/**
+ * Increments a player's score
+ */
 void Player::incScore() {
     this->score++;
 }
 
+/**
+ * Return the player's client ID
+ */
 int Player::getClientID() {
     return clientID;
 }
 
+/**
+ * Return the player's player ID
+ */
 std::string Player::getPlayerID() {
     return playerID;
 }
 
+/**
+ * Return the player's snake color
+ */
 std::string Player::getColor() {
     return color;
 }
 
+/**
+ * Return the player's score
+ */
 int Player::getScore() {
     return score;
 }
 
+/**
+ * Return the player's snake
+ */
 std::deque<Coord> Player::getSnake() {
     return snake;
 }
 
+/**
+ * Return the player's snake direction
+ */
 std::string Player::getDirection() {
     return direction;
 }
 
+/**
+ * Return the player's message count
+ */
 int Player::getMessageCount() {
     return messageCount;
 }

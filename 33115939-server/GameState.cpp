@@ -59,6 +59,9 @@ int GameState::addMessage(int clientID, std::string message) {
     }
 }
 
+/**
+ * Generates the string for the next authoritative game state
+ */
 std::string GameState::generateNextState() {
     // Return "NULL" if player1 or player2 has no messages
     if (player1.getMessageCount() == 0 || player2.getMessageCount() == 0) {
@@ -104,6 +107,9 @@ std::string GameState::generateNextState() {
 
 /******************/
 
+/**
+ * Sets up the food and the player in the beginning of the game
+ */
 void GameState::setup() {
     bool first = true;
     for (auto it : cidToPidMap) {
@@ -119,10 +125,16 @@ void GameState::setup() {
     generateFood();
 }
 
+/**
+ * Trigger inSession boolean to true
+ */
 void GameState::start() {
     inSession = true;
 }
 
+/**
+ * Reset the game state to initial values
+ */
 void GameState::reset() {
     inSession = false;
     cidToPidMap.clear();
@@ -136,6 +148,9 @@ int GameState::waiting() {
     return cidToPidMap.size() < 2;
 }
 
+/**
+ * Returns whether a game is in session
+ */
 bool GameState::gameInSession() {
     return inSession;
 }
@@ -158,6 +173,9 @@ std::string GameState::generateSetupMessage() {
 
 /******************/
 
+/**
+ * Checks whether two players' heads have collided
+ */
 bool GameState::checkCollision(Coord player1Head, Coord player2Head) {
     if (player1Head.x == player2Head.x && player1Head.y == player2Head.y)
         return true;
@@ -168,6 +186,9 @@ bool GameState::checkCollision(Coord player1Head, Coord player2Head) {
     return false;
 }
 
+/**
+ * Check whether either player consumes a food
+ */
 bool GameState::ateFood(Player* player, Coord playerHead) {
     if (playerHead.x == foodCoord.x && playerHead.y == foodCoord.y) {
         player->incScore();
@@ -177,6 +198,9 @@ bool GameState::ateFood(Player* player, Coord playerHead) {
     return false;
 }
 
+/**
+ * Parses the new head coordinates from a player's message
+ */
 Coord GameState::getHeadCoord(std::string message) {
     // Initial message is pid;ADD,x,y;ERASE,x,y
     // Split message so that result vector should now have {"pid", ADD,x,y", "ERASE,x,y"}
@@ -187,6 +211,9 @@ Coord GameState::getHeadCoord(std::string message) {
     return Coord{std::stoi(addCoords[1]), std::stoi(addCoords[2])};
 }
 
+/**
+ * Generate a random coordinate for the food within the game board
+ */
 Coord GameState::generateFood() {
     foodCoord.x = rand() % COL;
     foodCoord.y = rand() % ROW;

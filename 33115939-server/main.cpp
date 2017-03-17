@@ -133,6 +133,10 @@ void messageHandler(int clientID, string message) {
     } 
 }
 
+/**
+ * Called periodically to handle artifical latency queus. Also called to generate the next game
+ * state to send to clients.
+ */
 void periodicHandler() {
     long long currentTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(); 
 
